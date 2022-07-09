@@ -1,9 +1,7 @@
 <template>
-  <div class="main-video">
-    <video>
-      <source>
-    </video>
-  </div>
+  <video autoplay loop muted class="video-content">
+    <source v-bind:src="require('/src/assets/videos/videoBackground.mp4')" type="video/mp4">
+  </video>
   <div class="main-content">
     <div class="column" v-for="(category,categoryIndex) in categories" :key="categoryIndex">
       <div class="column-title text-design text-with-font">
@@ -82,14 +80,14 @@ export default {
     }
   },
   mounted() {
-    invoke('get-cards')
+    invoke('get_cards')
   },
   methods: {
     onClick: {},
     dropCard: function (event) {
       if (event.target.id !== "") {
         this.cards[this.selectedCardIndex].categoryId = event.target.id
-        invoke('set-card')
+        invoke('set_card')
       }
     },
     onCardDrag: function (event, cardIndex) {
@@ -101,14 +99,11 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.main-video {
-  position: absolute;
+.video-content {
+  position: fixed;
   z-index: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 100%;
+  min-width: 100%;
 }
 
 .main-content {
