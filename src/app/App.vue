@@ -46,4 +46,32 @@ body {
   font-family: Roboto, sans-serif;
 }
 
+.scroll_bar_smooth {
+  overflow-x: clip;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+}
+
+.scroll_bar_smooth::-webkit-scrollbar {
+  border-radius: 25px;
+  width: 8px;
+  height: 8px;
+}
+
+.scroll_bar_smooth::-webkit-scrollbar-thumb {
+  background: #B3AFB3;
+  border-radius: 20px;
+}
+
+.scroll_bar_smooth::-webkit-scrollbar-thumb:hover {
+  background: #696969;
+}
+
+.scroll_bar_smooth::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 0 #F0F0F0;
+  margin-top: 10px;
+}
+
 </style>
