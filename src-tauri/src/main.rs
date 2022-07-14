@@ -6,10 +6,7 @@ windows_subsystem = "windows"
 
 extern crate core;
 
-use std::borrow::Borrow;
-use std::result::Result;
 use sqlx::{sqlite::SqliteQueryResult, Sqlite, SqlitePool, migrate::MigrateDatabase, Pool, Error, Row};
-use sqlx::sqlite::SqliteRow;
 
 #[async_std::main]
 async fn main() {
@@ -79,7 +76,7 @@ async fn move_card(id: i32) {
 }
 
 #[tauri::command]
-async fn add_card(category_id: String) {
+async fn add_card(category_id: String) -> Result<Vec<Card>, String> {
     print!("{}", category_id);
     let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
     let mut query: &str = "INSERT INTO cards (title,category_id) VALUES('' ,$1)";
@@ -87,25 +84,34 @@ async fn add_card(category_id: String) {
     sqlx::query(&query)
         .bind(category_id)
         .execute(&pool)
-        .await
-        .expect("TODO: panic message");
+        .await.unwrap();
 
     query = "SELECT * FROM cards";
 
-    let cards = sqlx::query(&query)
+    let result = sqlx::query(&query)
         .fetch_all(&pool)
-        .await
-        .expect("TODO: panic message");
+        .await;
 
     pool.close().await;
 
-    cards;
+    let mut cards: Vec<Card> = vec![];
 
-    /*Ok(Card {
-        id: result.id,
-        title: result.title,
-        category_id: result.category_id,
-    }).expect("TODO: panic message");*/
+    for card in result {
+        let id: i32 = card.get("id");
+        let title: String = card.get("title");
+        let category_id: String = card.get("category_id");
+        cards.push(Card {
+            id,
+            title,
+            category_id,
+        });
+    }
+
+    if cards.len() > 0 {
+        Ok(cards)
+    } else {
+        Err("error".into())
+    }
 }
 
 #[tauri::command]
