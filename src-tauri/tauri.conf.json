@@ -4,7 +4,8 @@
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
     "devPath": "Set automatically by Vue CLI plugin",
-    "distDir": "Set automatically by Vue CLI plugin"
+    "distDir": "Set automatically by Vue CLI plugin",
+    "withGlobalTauri": true
   },
   "package": {
     "productName": "peeper",

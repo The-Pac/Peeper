@@ -10,24 +10,21 @@
         </div>
       </div>
       <div class="bottle-content">
-        <div class="cards scroll_bar_smooth" v-bind:id="category.id" @drop="dropCard" @dragover.prevent>
+        <div class="cards scroll_bar_smooth" v-bind:id="category.category_id" @drop="dropCard" @dragover.prevent>
           <template v-for="(card,cardIndex) in cards" :key="cardIndex">
             <div class="card" draggable="true" @dragstart="event => onCardDrag(event,cardIndex)"
-                 v-if="card.categoryId === category.id">
+                 v-if="card.category_id === category.category_id">
               <div>
                 <input class="input-title text-design text-with-font"
                        @input="event => card.title = event.target.value"
                        type="text"
                        v-bind:value="card.title">
               </div>
-              <div v-if="card.hasDate">
-                <h2>{{ card.dateFrom + ' ' + card.dateTo }}</h2>
-              </div>
             </div>
           </template>
         </div>
         <div class="add-div">
-          <button class="add-button" @click.prevent="onClick">
+          <button class="add-button" @click="onAddCard(category.category_id)">
             <h2 class="text-design text-with-font">Ajouter</h2>
           </button>
         </div>
@@ -37,7 +34,8 @@
 </template>
 
 <script>
-import {invoke} from '@tauri-apps/api/tauri'
+
+import {invoke} from "@tauri-apps/api";
 
 export default {
   name: "Home-Page",
@@ -45,59 +43,68 @@ export default {
     return {
       categories: [
         {
-          id: "todo",
+          category_id: "todo",
           title: "à faire"
         },
         {
-          id: "onprogress",
+          category_id: "onprogress",
           title: "en cours"
         },
         {
-          id: "finished",
+          category_id: "finished",
           title: "terminé"
         },
       ],
       cards: [
         {
+          id: 1,
           title: "Course",
-          hasDate: false,
-          categoryId: "todo",
-          dateFrom: "",
-          dateTo: ""
+          category_id: "todo",
         },
         {
+          id: 2,
           title: "Course",
-          hasDate: false,
-          categoryId: "todo",
-          dateFrom: "",
-          dateTo: ""
+          category_id: "todo",
         },
         {
+          id: 3,
           title: "Course",
-          hasDate: false,
-          categoryId: "todo",
-          dateFrom: "",
-          dateTo: ""
+          category_id: "todo",
         }
       ],
       selectedCardIndex: null
     }
   },
-  mounted() {
-    invoke('get_cards')
-  },
   methods: {
-    onClick: {},
+    onAddCard: function (category_id) {
+      invoke('add_card', {
+        categoryId: category_id
+      }).then((response) => {
+        console.log(response)
+        this.cards.push({
+          id: response.id,
+          title: response.title,
+          category_id: response.category_id
+        })
+      })
+
+    },
     dropCard: function (event) {
       if (event.target.id !== "") {
-        this.cards[this.selectedCardIndex].categoryId = event.target.id
-        invoke('set_card')
+        this.cards[this.selectedCardIndex].category_id = event.target.id
+        invoke('move_card', {
+          id: this.cards[this.selectedCardIndex].id,
+          category_id: this.cards[this.selectedCardIndex].category_id
+        })
       }
     },
     onCardDrag: function (event, cardIndex) {
       this.selectedCardIndex = cardIndex
       event.target.className = "card on-move"
     }
+  },
+  mounted() {
+    invoke('get_cards')
   }
 }
 </script>

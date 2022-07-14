@@ -3,40 +3,57 @@ all(not(debug_assertions), target_os = "windows"),
 windows_subsystem = "windows"
 )]
 
-use rusqlite::{Connection, Result};
 
-const CONNEXION: Result<Connection, rusqlite::Error> = Connection::open("database.db");
+extern crate core;
 
-fn main() {
-    let connexion: Result<Connection, rusqlite::Error> = Connection::open("database.db");
-    connexion.execute(
-        "CREATE TABLE cards (
-                  id              INTEGER PRIMARY KEY,
-                  has_date            INTEGER,
-                  date_from           TEXT
-                  date_to             TEXT
-                  title               TEXT
-                  category_id         TEXT
-                  ),
-          CREATE TABLE categories (
-                  id              INTEGER PRIMARY KEY,
-                  title               TEXT
-                  category_id         TEXT
-                  )
-                  ",
-        [],
-    );
+use std::borrow::Borrow;
+use std::result::Result;
+use sqlx::{sqlite::SqliteQueryResult, Sqlite, SqlitePool, migrate::MigrateDatabase, Pool, Error, Row};
+use sqlx::sqlite::SqliteRow;
+
+#[async_std::main]
+async fn main() {
+    check_data_base().await;
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_cards,set_card,get_categories])
+        .invoke_handler(tauri::generate_handler![get_cards,add_card,move_card,get_categories])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
+static DATA_BASE_URL: &str = "sqlite://database.db";
+
+async fn check_data_base() {
+    if !Sqlite::database_exists(&DATA_BASE_URL).await.unwrap_or(false) {
+        Sqlite::create_database(&DATA_BASE_URL).await.unwrap();
+        match schema_database().await {
+            Ok(_) => print!("database created"),
+            Err(e) => panic!("error create database : {:?}", e)
+        }
+    }
+}
+
+async fn schema_database() -> Result<SqliteQueryResult, Error> {
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query: &str =
+        "CREATE TABLE cards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            category_id TEXT
+        );
+        CREATE TABLE categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            category_id TEXT
+        );";
+
+    let result = sqlx::query(&query).execute(&pool).await;
+    pool.close().await;
+
+    return result;
+}
+
 struct Card {
     id: i32,
-    has_date: bool,
-    date_from: String,
-    date_to: String,
     title: String,
     category_id: String,
 }
@@ -47,49 +64,57 @@ struct Category {
     title: String,
 }
 
-/*#[tauri::command]
-fn get_cards() -> Result<()> {
-    let mut request = CONNEXION.prepare(
-        "SELECT * FROM cards;",
-    ).expect("rows failed");
-
-    let cards = request.query_map(|row| {
-        Ok(Card {
-            id: row.get(0)?: i32,
-            has_date: row.get(1)?: bool,
-            date_from: row.get(2)?.to_string(),
-            date_to: row.get(3)?.to_string(),
-            title: row.get(4)?.to_string(),
-            category_id: row.get(5)?.to_string(),
-        })
-    })?;
-
-    for card in cards {
-        println!("Found {:?}", card);
-    }
-    Ok(())
+#[tauri::command]
+async fn get_cards() {
+    let instance: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query = "SELECT * FROM cards;";
+    let result = sqlx::query(&query).execute(&instance).await;
+    instance.close().await;
+    print!("{:?}", result);
 }
 
 #[tauri::command]
-fn set_card() {}
+async fn move_card(id: i32) {
+    println!("{}", id);
+}
 
 #[tauri::command]
-fn get_categories() -> Result<()> {
-    let mut request = CONNEXION.prepare(
-        "SELECT * FROM categories;",
-    ).expect("rows failed");
+async fn add_card(category_id: String) {
+    print!("{}", category_id);
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let mut query: &str = "INSERT INTO cards (title,category_id) VALUES('' ,$1)";
 
-    let cards = request.query_map(|row| {
-        Ok(Category {
-            id: row.get(0)?: i32,
-            category_id: row.get(0)?.to_string(),
-            title: row.get(0)?.to_string(),
-        })
-    })?;
+    sqlx::query(&query)
+        .bind(category_id)
+        .execute(&pool)
+        .await
+        .expect("TODO: panic message");
 
-    for card in cards {
-        println!("Found {:?}", card);
-    }
-    Ok(())
-}*/
+    query = "SELECT * FROM cards";
+
+    let cards = sqlx::query(&query)
+        .fetch_all(&pool)
+        .await
+        .expect("TODO: panic message");
+
+    pool.close().await;
+
+    cards;
+
+    /*Ok(Card {
+        id: result.id,
+        title: result.title,
+        category_id: result.category_id,
+    }).expect("TODO: panic message");*/
+}
+
+#[tauri::command]
+async fn get_categories() {
+    let instance: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query = "SELECT * FROM categories;";
+    let result = sqlx::query(&query).execute(&instance).await;
+    instance.close().await;
+
+    print!("{:?}", result);
+}
 
