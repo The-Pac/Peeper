@@ -12,7 +12,7 @@ use sqlx::{sqlite::SqliteQueryResult, Sqlite, SqlitePool, migrate::MigrateDataba
 async fn main() {
     check_data_base().await;
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_cards,add_card,move_card,get_categories])
+        .invoke_handler(tauri::generate_handler![get_cards,add_card,move_card,get_categories,set_card])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -49,12 +49,14 @@ async fn schema_database() -> Result<SqliteQueryResult, Error> {
     return result;
 }
 
+#[derive(serde::Serialize)]
 struct Card {
     id: i32,
     title: String,
     category_id: String,
 }
 
+#[derive(serde::Serialize)]
 struct Category {
     id: i32,
     category_id: String,
@@ -62,35 +64,13 @@ struct Category {
 }
 
 #[tauri::command]
-async fn get_cards() {
-    let instance: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
-    let query = "SELECT * FROM cards;";
-    let result = sqlx::query(&query).execute(&instance).await;
-    instance.close().await;
-    print!("{:?}", result);
-}
-
-#[tauri::command]
-async fn move_card(id: i32) {
-    println!("{}", id);
-}
-
-#[tauri::command]
-async fn add_card(category_id: String) -> Result<Vec<Card>, String> {
-    print!("{}", category_id);
+async fn get_cards() -> Result<Vec<Card>, String> {
     let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
-    let mut query: &str = "INSERT INTO cards (title,category_id) VALUES('' ,$1)";
-
-    sqlx::query(&query)
-        .bind(category_id)
-        .execute(&pool)
-        .await.unwrap();
-
-    query = "SELECT * FROM cards";
-
+    let query: &str = "SELECT * FROM cards";
     let result = sqlx::query(&query)
         .fetch_all(&pool)
-        .await;
+        .await
+        .expect("Error");
 
     pool.close().await;
 
@@ -106,21 +86,73 @@ async fn add_card(category_id: String) -> Result<Vec<Card>, String> {
             category_id,
         });
     }
-
-    if cards.len() > 0 {
-        Ok(cards)
-    } else {
-        Err("error".into())
-    }
+    Ok(cards)
 }
 
 #[tauri::command]
-async fn get_categories() {
-    let instance: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
-    let query = "SELECT * FROM categories;";
-    let result = sqlx::query(&query).execute(&instance).await;
-    instance.close().await;
+async fn move_card(id: i32, category_id: String) -> Result<Vec<Card>, String> {
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query: &str = "UPDATE cards SET category_id = $1 WHERE id = $2";
 
-    print!("{:?}", result);
+    sqlx::query(&query)
+        .bind(category_id)
+        .bind(id)
+        .execute(&pool)
+        .await.expect("Error");
+
+    get_cards().await
+}
+
+#[tauri::command]
+async fn set_card(id: i32, title: String) -> Result<Vec<Card>, String> {
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query: &str = "UPDATE cards SET title = $1 WHERE id = $2";
+
+    sqlx::query(&query)
+        .bind(title)
+        .bind(id)
+        .execute(&pool)
+        .await.expect("Error");
+
+    get_cards().await
+}
+
+#[tauri::command]
+async fn add_card(category_id: String) -> Result<Vec<Card>, String> {
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query: &str = "INSERT INTO cards (title,category_id) VALUES('' ,$1)";
+
+    sqlx::query(&query)
+        .bind(category_id)
+        .execute(&pool)
+        .await.expect("Error");
+
+    get_cards().await
+}
+
+#[tauri::command]
+async fn get_categories() -> Result<Vec<Category>, String> {
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query: &str = "SELECT * FROM categories";
+    let result = sqlx::query(&query)
+        .fetch_all(&pool)
+        .await
+        .expect("Error");
+
+    pool.close().await;
+
+    let mut categories: Vec<Category> = vec![];
+
+    for category in result {
+        let id: i32 = category.get("id");
+        let title: String = category.get("title");
+        let category_id: String = category.get("category_id");
+        categories.push(Category {
+            id,
+            title,
+            category_id,
+        });
+    }
+    Ok(categories)
 }
 

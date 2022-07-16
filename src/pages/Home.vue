@@ -16,6 +16,7 @@
                  v-if="card.category_id === category.category_id">
               <div>
                 <input class="input-title text-design text-with-font"
+                       @blur="onFocusLost(card.id,card.title)"
                        @input="event => card.title = event.target.value"
                        type="text"
                        v-bind:value="card.title">
@@ -41,37 +42,8 @@ export default {
   name: "Home-Page",
   data() {
     return {
-      categories: [
-        {
-          category_id: "todo",
-          title: "à faire"
-        },
-        {
-          category_id: "onprogress",
-          title: "en cours"
-        },
-        {
-          category_id: "finished",
-          title: "terminé"
-        },
-      ],
-      cards: [
-        {
-          id: 1,
-          title: "Course",
-          category_id: "todo",
-        },
-        {
-          id: 2,
-          title: "Course",
-          category_id: "todo",
-        },
-        {
-          id: 3,
-          title: "Course",
-          category_id: "todo",
-        }
-      ],
+      categories: [],
+      cards: [],
       selectedCardIndex: null
     }
   },
@@ -80,31 +52,75 @@ export default {
       invoke('add_card', {
         categoryId: category_id
       }).then((response) => {
-        console.log(response)
-        this.cards.push({
-          id: response.id,
-          title: response.title,
-          category_id: response.category_id
+        this.cards = []
+        response.map(card => {
+          this.cards.push({
+            id: card.id,
+            title: card.title,
+            category_id: card.category_id
+          })
         })
       })
-
     },
     dropCard: function (event) {
       if (event.target.id !== "") {
         this.cards[this.selectedCardIndex].category_id = event.target.id
         invoke('move_card', {
           id: this.cards[this.selectedCardIndex].id,
-          category_id: this.cards[this.selectedCardIndex].category_id
+          categoryId: this.cards[this.selectedCardIndex].category_id
+        }).then(response => {
+          this.cards = []
+          response.map(card => {
+            this.cards.push({
+              id: card.id,
+              title: card.title,
+              category_id: card.category_id
+            })
+          })
         })
       }
     },
     onCardDrag: function (event, cardIndex) {
       this.selectedCardIndex = cardIndex
       event.target.className = "card on-move"
+    },
+    onFocusLost: function (id, title) {
+      invoke('set_card', {
+        id: id,
+        title: title
+      }).then(response => {
+        this.cards = []
+        response.map(card => {
+          this.cards.push({
+            id: card.id,
+            title: card.title,
+            category_id: card.category_id
+          })
+        })
+      })
     }
   },
-  mounted() {
-    invoke('get_cards')
+  beforeMount() {
+    invoke('get_cards').then(response => {
+      this.cards = []
+      response.map(card => {
+        this.cards.push({
+          id: card.id,
+          title: card.title,
+          category_id: card.category_id
+        })
+      })
+    })
+    invoke('get_categories').then(response => {
+      this.categories = []
+      response.map(card => {
+        this.categories.push({
+          id: card.id,
+          title: card.title,
+          category_id: card.category_id
+        })
+      })
+    })
   }
 }
 </script>
