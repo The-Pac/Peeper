@@ -1,13 +1,14 @@
 import {createApp} from 'vue'
 import App from './app/App.vue'
 import {addIcons, OhVueIcon} from "oh-vue-icons";
-import {CoMediaPlay, BiPeopleFill, CoExitToApp} from "oh-vue-icons/icons";
+import {CoExitToApp} from "oh-vue-icons/icons/co";
+import {MdDeleteoutline} from "oh-vue-icons/icons/md";
 import router from "@/app/Router";
 
 const app = createApp(App)
 
 //ICONS
-addIcons(CoMediaPlay, BiPeopleFill, CoExitToApp)
+addIcons(CoExitToApp, MdDeleteoutline)
 app.component("v-icon", OhVueIcon);
 
 //ROUTES

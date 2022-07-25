@@ -1,6 +1,6 @@
 <template>
   <video autoplay loop muted class="video-content">
-    <source v-bind:src="require('/src/assets/videos/videoBackground.mp4')" type="video/mp4">
+    <source v-bind:src="require('/src/assets/videos/background_video.mp4')" type="video/mp4">
   </video>
   <div class="main-content">
     <div class="bottle-container" v-for="(category,categoryIndex) in categories" :key="categoryIndex">
@@ -14,12 +14,14 @@
           <template v-for="(card,cardIndex) in cards" :key="cardIndex">
             <div class="card" draggable="true" @dragstart="event => onCardDrag(event,cardIndex)"
                  v-if="card.category_id === category.category_id">
-              <div>
+              <div style="display:flex;">
                 <input class="input-title text-design text-with-font"
                        @blur="onFocusLost(card.id,card.title)"
                        @input="event => card.title = event.target.value"
                        type="text"
+                       placeholder="Titre ici..."
                        v-bind:value="card.title">
+                <v-icon class="card-delete" name="md-deleteoutline" scale="2" @click="deleteCard(card.id)"/>
               </div>
             </div>
           </template>
@@ -80,6 +82,20 @@ export default {
         })
       }
     },
+    deleteCard: function (id) {
+      invoke('delete_card', {
+        id: id
+      }).then(response => {
+        this.cards = []
+        response.map(card => {
+          this.cards.push({
+            id: card.id,
+            title: card.title,
+            category_id: card.category_id
+          })
+        })
+      })
+    },
     onCardDrag: function (event, cardIndex) {
       this.selectedCardIndex = cardIndex
       event.target.className = "card on-move"
@@ -99,7 +115,8 @@ export default {
         })
       })
     }
-  },
+  }
+  ,
   beforeMount() {
     invoke('get_cards').then(response => {
       this.cards = []
@@ -247,7 +264,7 @@ export default {
             border: none;
             background-color: transparent;
             text-align: center;
-            font-size: xx-large;
+            font-size: x-large;
           }
 
           .input-title:focus {
@@ -256,6 +273,12 @@ export default {
 
           .on-move {
             background-color: cadetblue;
+          }
+
+          .card-delete {
+            position: relative;
+            right: 0;
+            top: 0;
           }
         }
       }

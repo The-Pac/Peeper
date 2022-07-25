@@ -12,7 +12,7 @@ use sqlx::{sqlite::SqliteQueryResult, Sqlite, SqlitePool, migrate::MigrateDataba
 async fn main() {
     check_data_base().await;
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_cards,add_card,move_card,get_categories,set_card])
+        .invoke_handler(tauri::generate_handler![get_cards,add_card,move_card,get_categories,set_card,delete_card])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -87,6 +87,18 @@ async fn get_cards() -> Result<Vec<Card>, String> {
         });
     }
     Ok(cards)
+}
+
+#[tauri::command]
+async fn delete_card(id: i32) -> Result<Vec<Card>, String> {
+    let pool: Pool<Sqlite> = SqlitePool::connect(&DATA_BASE_URL).await.unwrap();
+    let query: &str = "DELETE FROM cards WHERE id = $1";
+    sqlx::query(&query)
+        .bind(id)
+        .execute(&pool)
+        .await.expect("Error");
+
+    get_cards().await
 }
 
 #[tauri::command]

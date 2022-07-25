@@ -30,7 +30,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "peeper",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -57,10 +57,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 1000,
+        "height": 900,
         "resizable": false,
         "title": "peeper",
-        "width": 1900,
+        "width": 1400,
         "fileDropEnabled": false
       }
     ]
