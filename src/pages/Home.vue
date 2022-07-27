@@ -150,25 +150,46 @@ export default {
   min-width: 100%;
 }
 
+@keyframes floating-bottle {
+  0% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(10px);
+  }
+}
+
 .main-content {
+  overflow-y: clip;
+  overflow-x: clip;
   position: absolute;
   z-index: 1;
   width: 80%;
-  height: 80%;
+  height: 100%;
   display: grid;
   justify-content: space-between;
   grid-template-columns: 25% 25% 25%;
-  top: 20%;
+  top: 10%;
   bottom: 10%;
   left: 10%;
   right: 10%;
 
   .bottle-container {
-
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    animation: floating-bottle 3s infinite reverse;
 
     .bottle-top {
       border-top-left-radius: 40%;
       border-top-right-radius: 40%;
+      width: 90%;
       height: 20vh;
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
       backdrop-filter: blur(1.3px);
@@ -228,8 +249,8 @@ export default {
     }
 
     .bottle-content {
-      padding: 20px 10px;
-      height: 50vh;
+      width: 90%;
+      height: 40vh;
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
       backdrop-filter: blur(1.3px);
       -webkit-backdrop-filter: blur(1.3px);
