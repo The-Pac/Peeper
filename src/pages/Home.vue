@@ -154,11 +154,17 @@ export default {
   0% {
     transform: translateY(-10px);
   }
-  50% {
+  25% {
     transform: translateY(0);
   }
-  100% {
+  50% {
     transform: translateY(10px);
+  }
+  75% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-10px);
   }
 }
 
@@ -184,7 +190,7 @@ export default {
     justify-content: center;
     height: 100%;
     width: 100%;
-    animation: floating-bottle 3s infinite reverse;
+    animation: floating-bottle 10s infinite reverse;
 
     .bottle-top {
       border-top-left-radius: 40%;
@@ -322,6 +328,18 @@ export default {
         }
       }
     }
+  }
+
+  .bottle-container:nth-child(1) {
+    animation-delay: .5s;
+  }
+
+  .bottle-container:nth-child(2) {
+    animation-delay: 1s;
+  }
+
+  .bottle-container:nth-child(3) {
+    animation-delay: 1.5s;
   }
 }
 </style>
