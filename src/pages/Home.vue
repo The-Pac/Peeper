@@ -173,22 +173,19 @@ export default {
   overflow-x: clip;
   position: absolute;
   z-index: 1;
-  width: 80%;
+  width: 100%;
   height: 100%;
   display: grid;
-  justify-content: space-between;
+  justify-content: space-around;
+  align-items: center;
   grid-template-columns: 25% 25% 25%;
-  top: 10%;
-  bottom: 10%;
-  left: 10%;
-  right: 10%;
 
   .bottle-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: 70%;
     width: 100%;
     animation: floating-bottle 10s infinite reverse;
 
